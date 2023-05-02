@@ -30,3 +30,4 @@ for i in range(num_leds):
 
 # Daten an WLED senden
 sock.sendto(data, (WLED_IP, WLED_PORT))
+print(data, (WLED_IP, WLED_PORT))
