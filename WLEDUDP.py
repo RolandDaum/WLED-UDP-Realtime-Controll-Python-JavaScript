@@ -1,7 +1,7 @@
 import socket
 
 # WLED-IP-Adresse
-WLED_IP = "192.168.0.2"
+WLED_IP = "wled.local"
 # WLED-UDP-Port
 WLED_PORT = 21324
 
@@ -10,7 +10,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Protokoll auswählen
 protocol = 1
-# Timeout nach 1 Sekunde
+# Timeout auf 1 Sekunde setzen
 timeout = 1
 
 # Farben für ungerade und gerade LEDs
@@ -27,6 +27,9 @@ colors = [odd_color if i % 2 == 1 else even_color for i in range(num_leds)]
 data = bytearray([protocol, timeout])
 for i in range(num_leds):
     data += bytearray([i, colors[i][0], colors[i][1], colors[i][2]])
+
+# Byte 1 auf 1 setzen, um die Farben dauerhaft zu ändern
+data[1] = 255
 
 # Daten an WLED senden
 sock.sendto(data, (WLED_IP, WLED_PORT))
