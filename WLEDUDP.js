@@ -1,34 +1,48 @@
-// WLED-IP-Adresse
-const WLED_IP = "192.168.0.2";
-// WLED-UDP-Port
-const WLED_PORT = 21324;
+function test(dgram) {
+  const dgram = require('dgram');
 
-// Protokoll auswählen
-const protocol = 1;
-// Timeout nach 1 Sekunde
-const timeout = 1;
+  // WLED-IP-Adresse
+  const WLED_IP = "wled.local";
+  // WLED-UDP-Port
+  const WLED_PORT = 21324;
 
-// Farben für ungerade und gerade LEDs
-const oddColor = [255, 0, 0];
-const evenColor = [0, 255, 0];
+  // Erstelle einen UDP-Socket
+  const sock = dgram.createSocket('udp4');
 
-// Anzahl der LEDs
-const numLeds = 100;
+  // Protokoll auswählen
+  const protocol = 1;
+  // Timeout auf 255 setzen, um im UDP-Datenmodus zu bleiben
+  const timeout = 255;
 
-// Farbdaten für alle LEDs erstellen
-const colors = new Array(numLeds).fill().map((_, i) => i % 2 == 1 ? oddColor : evenColor);
+  // Farben für ungerade und gerade LEDs
+  const odd_color = [255, 0, 0];
+  const even_color = [0, 255, 0];
 
-// Farbdaten in das WARLS-Protokoll konvertieren
-const data = new Uint8Array(2 + numLeds * 4);
-data[0] = protocol;
-data[1] = timeout;
-for (let i = 0; i < numLeds; i++) {
-  data[2 + i * 4] = i;
-  data[3 + i * 4] = colors[i][0];
-  data[4 + i * 4] = colors[i][1];
-  data[5 + i * 4] = colors[i][2];
+  // Anzahl der LEDs
+  const num_leds = 100;
+
+  // Farbdaten für alle LEDs erstellen
+  const colors = new Array(num_leds).fill(0).map((_, i) => i % 2 === 1 ? odd_color : even_color);
+
+  // Farbdaten in das WARLS-Protokoll konvertieren
+  let data = Buffer.alloc(1 + 1 + num_leds * 4);
+  data.writeUInt8(protocol, 0);
+  data.writeUInt8(timeout, 1);
+  for (let i = 0; i < num_leds; i++) {
+      data.writeUInt8(i, 2 + i * 4);
+      data.writeUInt8(colors[i][0], 2 + i * 4 + 1);
+      data.writeUInt8(colors[i][1], 2 + i * 4 + 2);
+      data.writeUInt8(colors[i][2], 2 + i * 4 + 3);
+  }
+
+  // Daten an WLED senden
+  sock.send(data, 0, data.length, WLED_PORT, WLED_IP, (err) => {
+      if (err) {
+          console.error(err);
+      } else {
+          console.log("Data sent successfully.");
+      }
+      sock.close();
+  });
+
 }
-
-// Daten an WLED senden
-const socket = new window.Socket();
-socket.send(data.buffer, 0, data.length, WLED_IP, WLED_PORT);
